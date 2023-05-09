@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>download movies, shows and anime from the command line. &mdash; karudo's nerd shit</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="./favicon.png">
+  </head>
+  <body>
+  
+    <nav class="menu">
+      <div class="nav-left">
+        <ul>
+          <li><a href="index.html"><img class="logo" src="./favicon.png" alt="" />karudo's nerd shit</a></li>
+        </ul>
+      </div>
+      <div class="nav-right">
+        <ul>
+          <li><a href="mailto:itskarudo@protonmail.com">contact</a></li>
+          <li><a href="https://twitter.com/itskarudo">twitter</a></li>
+          <li><a href="https://github.com/itskarudo">github</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <article>
+<h1 id="download%20movies,%20shows%20and%20anime%20from%20the%20command%20line.">download movies, shows and anime from the command line.</h1>
+
+<p>over the past few days I&#8217;ve been wanting to learn bash, so I started working on <a href="https://github.com/itskarudo/eiga">eiga</a>, a tool to download torrents from the command line.</p>
+
+<p><em>eiga</em> allows you to download movies from <a href="https://yts.mx">YTS</a>, TV shows from <a href="https://1337x.to">1337x</a>, and anime from <a href="https://nyaa.si">nyaa.si</a>, it uses <code>curl</code> to request the data, <a href="https://github.com/stedolan/jq"><code>jq</code></a>, <code>grep</code> and <code>sed</code> to parse the responses, and <a href="https://github.com/junegunn/fzf"><code>fzf</code></a> to display the search results in a user-friendly manner.</p>
+
+<h2 id="install">install</h2>
+
+<p>make sure you have <code>curl</code>, <code>jq</code> and <code>fzf</code> installed.</p>
+
+<pre><code>$ git clone https:&#47;&#47;github.com&#47;itskarudo&#47;eiga &#38;&#38; cd eiga
+$ sudo cp .&#47;eiga &#47;usr&#47;local&#47;bin&#47;
+</code></pre>
+
+<h2 id="usage">usage</h2>
+
+<pre><code>$ eiga
+usage: eiga [options...]
+
+Options:
+    -m, --movies              Search in movie sources (yts.mx)
+    -s, --shows               Search in TV shows sources (1337x)
+    -a, --anime               Search in anime sources (nyaa.si)
+    -p, --pages               Specify number of pages to fetch.
+    -h, --help                Show this text and exit.
+</code></pre>
+
+<h3 id="example%20usage">example usage</h3>
+
+<h4 id="fetch%202%20pages%20off%20nyaa.si%20results">fetch 2 pages off nyaa.si results</h4>
+
+<pre><code>$ eiga --anime --pages 2
+&#62; fullmetal alchemist: brotherhood
+</code></pre>
+
+<h4 id="search%20for%20both%20movies%20and%20TV%20shows">search for both movies and TV shows</h4>
+
+<pre><code>$ eiga -m -s
+&#62; breaking bad
+</code></pre>
+</article>
+
+    <footer>
+      <p>&#127279; 2023 itskarudo</p>
+      Created with ♥️ and <a href="https://romanzolotarev.com/ssg.html">ssg</a>
+    </footer>
+
+  </body>
+</html>

