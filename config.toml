@@ -1,0 +1,18 @@
+title = "karudo's blog"
+
+base_url = "https://itskarudo.github.io"
+
+compile_sass = true
+
+build_search_index = false
+
+theme = "no-style-please-modded"
+
+
+[markdown]
+highlight_code = true
+
+[extra]
+list_pages = true
+no_list_date = true
+katex_enable = true
