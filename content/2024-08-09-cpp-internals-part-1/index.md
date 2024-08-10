@@ -105,7 +105,7 @@ int int_array_get(struct IntArray* arr, unsigned int idx) {
 }
 
 int main(void) {
-	struct IntArray arr = reate_new_int_array();
+	struct IntArray arr = create_new_int_array();
 	
 	int x = int_array_get(arr, 0);
 }
@@ -150,7 +150,7 @@ As you can see, the first argument passed to `IntArray::get` is a pointer to the
 
 # Operator Overloading
 
-Let's take another look at out previous example. Even though the `arr.get(0)` syntax works fine, it still feels a bit clunky, since our variable is really an array we would really like to have an array-like syntax for random access such as `arr[0]`. This is where operator overloading comes into play.
+Let's take another look at our previous example. Even though the `arr.get(0)` syntax works fine, it still feels a bit clunky, since our variable is really an array we would really like to have an array-like syntax for random access such as `arr[0]`. This is where operator overloading comes into play.
 
 Operator overloading is a way to define or modify how your object behaves with different operators. You might have seen the classic C++ hello world:
 
