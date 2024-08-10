@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+        <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+
+        
+        
+        
+
+        
+
+        
+
+        
+
+        
+        
+        
+
+        <title>C++ Internals for Hackers: Part 1</title>
+        
+        <meta name="title" content="C++ Internals for Hackers: Part 1">
+        
+        
+        <meta name="generator" content="Zola v0.16.1">
+
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://itskarudo.github.io/cpp-internals-part-1/">
+        <meta property="og:site_name" content="karu&#x27;s blog">
+        <meta property="og:title" content="C++ Internals for Hackers: Part 1">
+        
+        
+
+        
+        
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://itskarudo.github.io/cpp-internals-part-1/">
+        <meta property="twitter:title" content="C++ Internals for Hackers: Part 1">
+        
+        
+        
+        
+        <link rel="canonical" href="https://itskarudo.github.io/cpp-internals-part-1/">
+        
+        <script type="application/ld+json">
+            {
+                
+                "url":"https://itskarudo.github.io/cpp-internals-part-1/",
+                "@type":"WebSite",
+                "headline":"C++ Internals for Hackers: Part 1",
+                "name":"C++ Internals for Hackers: Part 1",
+                
+                "@context":"https://schema.org"
+            }
+        </script>
+        
+        
+        
+        <link rel="stylesheet" href="https://itskarudo.github.io/style.css"/>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-wcIxkf4k558AjM3Yz3BBFQUbk/zgIYC2R0QpeeYb+TwlBVMrlgLqwRjRtGZiK7ww" crossorigin="anonymous">
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1TVlQDA60VBbJS0oA934VSz82sBx1X7kSx2ATBDIyd" crossorigin="anonymous"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/mathtex-script-type.min.js" integrity="sha384-OGHJvxKrLNowXjZcg7A8ziPZctl4h7FncefPoKSuxgVXFxeM87GCKFJvOaTeBB9q" crossorigin="anonymous"></script>
+
+    </head>
+    <body theme="auto">
+        <article class="w">
+            <header>
+                
+                
+<h1>C++ Internals for Hackers: Part 1</h1>
+<p class="post-meta"><time datetime="2024-08-09">August 09, 2024</time></p>
+
+            </header>
+            <main class="page-content" aria-label="Content">
+                
+
+
+
+<h1 id="introduction">Introduction</h1>
+<p>When starting to learn reverse engineering, you usually start with C binaries, throwing it into IDA or Ghidra, and scrolling up and down while renaming all your little variables, maybe you're a CTF player and most binary exploitation challenges you face are written in C, how convenient. But at some point you need to leave your comfort zone, not all programs are written in C, a lot of malware nowadays for example is written in a higher level language such as Go, Zig, or Rust. The main reason for this is that these languages provide a richer standard library than what the C standard library has to offer. This transition can be very daunting because as they say, C is a high level assembly language, with enough time you will be able to read a C program and know exactly how the resulting assembly is going to be. But other languages provide advanced features such as Go's goroutines, Rust's <code>?</code> syntax with the <code>Result</code> type, and other features that do not directly translate in a decompiler.</p>
+<p>I believe C++ is a nice language to start the transition from C to other languages. It is not as verbose as other languages, has similar type system to C, and overall results in a relatively decent decompiler output. It also has support for other not trivial features such as function overloading, inheritance, and many syntactic sugar sparkled here and there.</p>
+<p>In this series I will try giving you an overview on how some C++ features work internally, by comparing what C++ developers take for granted and its corresponding assembly output, I will be assuming familiarity with C reverse engineering and Object Oriented Programming concepts, some C++ knowledge is preferable but I'll try my best  to explain things as I go on :)</p>
+<h1 id="function-overloading-and-name-mangling">Function Overloading and Name Mangling</h1>
+<p>C++ has this neat feature where you can define multiple functions with the same name as long as they have different argument types.</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">add</span><span>(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">a</span><span>, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">b</span><span>) {
+</span><span>	</span><span style="color:#b48ead;">return</span><span> a + b;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">double </span><span style="color:#8fa1b3;">add</span><span>(</span><span style="color:#b48ead;">double </span><span style="color:#bf616a;">a</span><span>, </span><span style="color:#b48ead;">double </span><span style="color:#bf616a;">b</span><span>) {
+</span><span>	</span><span style="color:#b48ead;">return</span><span> a + b;
+</span><span>}
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>(</span><span style="color:#b48ead;">void</span><span>) {
+</span><span>	</span><span style="color:#b48ead;">int</span><span> int_result = </span><span style="color:#bf616a;">add</span><span>(</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2</span><span>);
+</span><span>	</span><span style="color:#b48ead;">double</span><span> double_result = </span><span style="color:#bf616a;">add</span><span>(</span><span style="color:#d08770;">1.5</span><span>, </span><span style="color:#d08770;">2.5</span><span>);
+</span><span>}
+</span></code></pre>
+<p>This is not legal in C since it uses the function name only to determine which function to call, but in C++ things are a bit different. C++ uses a technique known as <a href="https://en.wikipedia.org/wiki/Name_mangling">Name Mangling</a>, instead of using the function's name by itself, it uses a combination of the function's name and argument types and generates a new name for the function based on that.</p>
+<p>If you compile the previous code and open it in IDA, you will see the following output:</p>
+<pre data-lang="nasm" style="background-color:#2b303b;color:#c0c5ce;" class="language-nasm "><code class="language-nasm" data-lang="nasm"><span style="color:#b48ead;">mov     </span><span style="color:#bf616a;">esi</span><span>, </span><span style="color:#d08770;">2</span><span style="color:#65737e;">          ; int
+</span><span style="color:#b48ead;">mov     </span><span style="color:#bf616a;">edi</span><span>, </span><span style="color:#d08770;">1</span><span style="color:#65737e;">          ; int
+</span><span style="color:#b48ead;">call    </span><span style="color:#8fa1b3;">_Z3addii</span><span style="color:#65737e;">        ; add(int,int)
+</span><span style="color:#b48ead;">mov     </span><span>[</span><span style="color:#bf616a;">rbp</span><span>+</span><span style="color:#8fa1b3;">var_C</span><span>], </span><span style="color:#bf616a;">eax
+</span><span style="color:#b48ead;">movsd   </span><span style="color:#bf616a;">xmm0</span><span>, </span><span style="color:#bf616a;">cs</span><span style="color:#8fa1b3;">:qword_2008
+</span><span style="color:#b48ead;">mov     </span><span style="color:#bf616a;">rax</span><span>, </span><span style="color:#bf616a;">cs</span><span style="color:#8fa1b3;">:qword_2010
+</span><span style="color:#b48ead;">movapd  </span><span style="color:#bf616a;">xmm1</span><span>, </span><span style="color:#bf616a;">xmm0</span><span style="color:#65737e;">      ; double
+</span><span style="color:#b48ead;">movq    </span><span style="color:#bf616a;">xmm0</span><span>, </span><span style="color:#bf616a;">rax</span><span style="color:#65737e;">       ; double
+</span><span style="color:#b48ead;">call    </span><span style="color:#8fa1b3;">_Z3adddd</span><span style="color:#65737e;">        ; add(double,double)
+</span></code></pre>
+<p>You see the <code>_Z3addii</code> and <code>_Z3adddd</code>? those are our mangled names. You can see what they translate to next to each corresponding <code>call</code> instruction as a comment, you can also use <a href="https://demangler.com/">demangler.com</a> to see that.</p>
+<p>This simple feature is also what implements <a href="https://en.cppreference.com/w/cpp/language/namespace">namespaces</a>, <a href="https://en.cppreference.com/w/cpp/language/nested_types">nested types</a> and <a href="https://en.cppreference.com/w/cpp/language/static">static members</a>.</p>
+<h2 id="extern-c">extern &quot;C&quot;</h2>
+<p>Take the following example of using C and C++ together:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#65737e;">// file1.c
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">foo</span><span>(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">x</span><span>) {
+</span><span>	</span><span style="color:#96b5b4;">printf</span><span>(&quot;</span><span style="color:#a3be8c;">x is </span><span style="color:#d08770;">%d</span><span style="color:#96b5b4;">\n</span><span>&quot;, x);
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// file2.cpp
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">foo</span><span>(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">x</span><span>);
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>(</span><span style="color:#b48ead;">void</span><span>) {
+</span><span>	</span><span style="color:#bf616a;">foo</span><span>(</span><span style="color:#d08770;">5</span><span>);
+</span><span>}
+</span></code></pre>
+<p>If you compile these files into object files, the C file with <code>gcc</code> and the C++ file with <code>g++</code>, then try and link them, you will get the following error:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>undefined reference to `foo(int)&#39;
+</span></code></pre>
+<p>What is causing that? Well, as we've established, C does not mangle function names, so the exported symbol in the C object file will carry the name <code>foo</code>, but <code>foo</code> when declared in the C++ file will have the mangled name <code>_Z3fooi</code>, this is the name the linker looks for in the C object which can not find so it reports an error.</p>
+<p>To fix this you need to tell the C++ compiler to disable name mangling for this function, this is done by the <code>extern &quot;C&quot;</code> syntax:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">extern </span><span>&quot;</span><span style="color:#a3be8c;">C</span><span>&quot; </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">foo</span><span>(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">x</span><span>);
+</span></code></pre>
+<p><a href="https://github.com/protocolbuffers/protobuf/blob/main/php/ext/google/protobuf/php-upb.h#L288">You might have seen this syntax in header files of libraries written in C before</a>, this is essentially providing compatibility for C++ code to use these header files without having to redeclare every function you need to use.</p>
+<h1 id="classes-structs-and-methods">Classes, Structs and Methods</h1>
+<h2 id="class-vs-struct">class vs struct</h2>
+<p>One of the main differences often told about C and C++ is classes, well sorry to break it to you but in C++, classes and structs are identical <sup class="footnote-reference"><a href="#1">1</a></sup>. When stumbling upon complex data structures while reverse engineering C++ you can really just think of them as structs. The real difference is in the extra features C++ adds to the syntax.</p>
+<h2 id="methods">Methods</h2>
+<p>Let's take a look at the following C code:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">struct </span><span>IntArray {
+</span><span>	</span><span style="color:#b48ead;">unsigned int</span><span> size;
+</span><span>	</span><span style="color:#b48ead;">unsigned int</span><span> capacity;
+</span><span>	</span><span style="color:#b48ead;">int</span><span>* data;
+</span><span>};
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">int_array_get</span><span>(</span><span style="color:#b48ead;">struct</span><span> IntArray* </span><span style="color:#bf616a;">arr</span><span>, </span><span style="color:#b48ead;">unsigned int </span><span style="color:#bf616a;">idx</span><span>) {
+</span><span>	</span><span style="color:#96b5b4;">assert</span><span>(idx &lt; arr-&gt;size);
+</span><span>	</span><span style="color:#b48ead;">return</span><span> arr-&gt;data[idx];
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>(</span><span style="color:#b48ead;">void</span><span>) {
+</span><span>	</span><span style="color:#b48ead;">struct</span><span> IntArray arr = </span><span style="color:#bf616a;">create_new_int_array</span><span>();
+</span><span>	
+</span><span>	</span><span style="color:#b48ead;">int</span><span> x = </span><span style="color:#bf616a;">int_array_get</span><span>(arr, </span><span style="color:#d08770;">0</span><span>);
+</span><span>}
+</span></code></pre>
+<p>If you're familiar with OOP patterns, you might notice this is just the definition of a class and a method for said class, let's write it in a more C++-y way:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">struct </span><span>IntArray {
+</span><span>	</span><span style="color:#b48ead;">unsigned int</span><span> size;
+</span><span>	</span><span style="color:#b48ead;">unsigned int</span><span> capacity;
+</span><span>	</span><span style="color:#b48ead;">int</span><span>* data;
+</span><span>
+</span><span>	</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">get</span><span>(</span><span style="color:#b48ead;">unsigned int </span><span style="color:#bf616a;">idx</span><span>) {
+</span><span>		</span><span style="color:#96b5b4;">assert</span><span>(idx &lt; </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">size</span><span>);
+</span><span>		</span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">data</span><span>[idx];
+</span><span>	}
+</span><span>};
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>(</span><span style="color:#b48ead;">void</span><span>) {
+</span><span>	</span><span style="color:#b48ead;">struct</span><span> IntArray arr = </span><span style="color:#bf616a;">create_new_int_array</span><span>();
+</span><span>	
+</span><span>	</span><span style="color:#b48ead;">int</span><span> x = arr.</span><span style="color:#bf616a;">get</span><span>(</span><span style="color:#d08770;">0</span><span>);
+</span><span>}
+</span></code></pre>
+<p>As you can see, by making the <code>get</code> function a method, we remove the need of passing the <code>arr</code> variable, C++ gives us a handy variable called <code>this</code> which is a pointer to the current object. If you're familiar with other OOP langauges such as Java this would feel right at home.</p>
+<p>How does this work? exactly as the C code.</p>
+<pre data-lang="nasm" style="background-color:#2b303b;color:#c0c5ce;" class="language-nasm "><code class="language-nasm" data-lang="nasm"><span style="color:#b48ead;">call   </span><span style="color:#8fa1b3;">_Z20create_new_int_arrayv</span><span style="color:#65737e;"> ; create_new_int_array()
+</span><span style="color:#b48ead;">mov    </span><span style="color:#96b5b4;">QWORD PTR </span><span>[</span><span style="color:#bf616a;">rbp</span><span>-</span><span style="color:#d08770;">0x20</span><span>], </span><span style="color:#bf616a;">rax    
+</span><span style="color:#b48ead;">mov    </span><span style="color:#96b5b4;">QWORD PTR </span><span>[</span><span style="color:#bf616a;">rbp</span><span>-</span><span style="color:#d08770;">0x18</span><span>], </span><span style="color:#bf616a;">rdx                                   
+</span><span style="color:#b48ead;">lea    </span><span style="color:#bf616a;">rax</span><span>, [</span><span style="color:#bf616a;">rbp</span><span>-</span><span style="color:#d08770;">0x20</span><span>]
+</span><span style="color:#b48ead;">mov    </span><span style="color:#bf616a;">esi</span><span>, </span><span style="color:#d08770;">0x0
+</span><span style="color:#b48ead;">mov    </span><span style="color:#bf616a;">rdi</span><span>, </span><span style="color:#bf616a;">rax
+</span><span style="color:#b48ead;">call   </span><span style="color:#8fa1b3;">&lt;_ZN8IntArray3getEj</span><span style="color:#65737e;">       ; IntArray::get(unsigned int)
+</span></code></pre>
+<p>As you can see, the first argument passed to <code>IntArray::get</code> is a pointer to the the <code>arr</code> variable (check the <code>rdi</code> register), and every other argument is just shifted in position.</p>
+<h1 id="operator-overloading">Operator Overloading</h1>
+<p>Let's take another look at our previous example. Even though the <code>arr.get(0)</code> syntax works fine, it still feels a bit clunky, since our variable is really an array we would really like to have an array-like syntax for random access such as <code>arr[0]</code>. This is where operator overloading comes into play.</p>
+<p>Operator overloading is a way to define or modify how your object behaves with different operators. You might have seen the classic C++ hello world:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>(</span><span style="color:#b48ead;">void</span><span>) {
+</span><span>	std::cout &lt;&lt; &quot;</span><span style="color:#a3be8c;">hello world!</span><span>&quot; &lt;&lt; std::endl;
+</span><span>}
+</span></code></pre>
+<p>Those little <code>&lt;&lt;</code> things are operators defined on the <code>std::iostream</code> type, which <code>std::cout</code> is an instance of.</p>
+<p>Let's see how that looks in our class:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">struct </span><span>IntArray {
+</span><span>	</span><span style="color:#b48ead;">unsigned int</span><span> size;
+</span><span>	</span><span style="color:#b48ead;">unsigned int</span><span> capacity;
+</span><span>	</span><span style="color:#b48ead;">int</span><span>* data;
+</span><span>
+</span><span>	</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">operator[]</span><span>(</span><span style="color:#b48ead;">unsigned int </span><span style="color:#bf616a;">idx</span><span>) {
+</span><span>		</span><span style="color:#96b5b4;">assert</span><span>(idx &lt; </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">size</span><span>);
+</span><span>		</span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">this</span><span>-&gt;</span><span style="color:#bf616a;">data</span><span>[idx];
+</span><span>	}
+</span><span>};
+</span><span>
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span>(</span><span style="color:#b48ead;">void</span><span>) {
+</span><span>	</span><span style="color:#b48ead;">struct</span><span> IntArray arr = </span><span style="color:#bf616a;">create_new_int_array</span><span>();
+</span><span>	
+</span><span>	</span><span style="color:#b48ead;">int</span><span> x = arr[</span><span style="color:#d08770;">0</span><span>];
+</span><span>}
+</span></code></pre>
+<p>Defining operators is as simple as defining a method called <code>operatorX</code>, these names are mangled and used just like normal functions. You can think of it as something like:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span>IntArray::</span><span style="color:#b48ead;">operator</span><span>[](</span><span style="color:#bf616a;">this</span><span>, </span><span style="color:#d08770;">0</span><span>);
+</span></code></pre>
+<p>This feature, along side being the source of <a href="https://www.reddit.com/r/cpp/comments/139c2v1/whats_the_most_hilarious_use_of_operator/">many cursed C++ code</a>, is what strikes a lot of fear for people decompiling a C++ binary for the first time, because something as simple looking as:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span>std::vector&lt;</span><span style="color:#b48ead;">int</span><span>&gt; arr = {</span><span style="color:#d08770;">1</span><span>,</span><span style="color:#d08770;">2</span><span>,</span><span style="color:#d08770;">3</span><span>};
+</span><span style="color:#b48ead;">int</span><span> v = arr[</span><span style="color:#d08770;">0</span><span>];
+</span></code></pre>
+<p>After resolving all the type aliasing and overloads, will turn into something like:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">int</span><span> v = std::vector&lt;</span><span style="color:#b48ead;">int</span><span>,std::allocator&lt;</span><span style="color:#b48ead;">int</span><span>&gt;&gt;::operator[](arr, </span><span style="color:#d08770;">0</span><span>);
+</span></code></pre>
+<p>Honestly, this just takes some getting used to, the types on non-stripped binaries are easy to understand, just takes a bit of practice.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>So this concludes the first part of this series, in the next part we will be taking a look at how inheritance and virtual function overrides work, see ya!</p>
+<hr />
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>Not really, they differ in the default visibility of members. https://stackoverflow.com/a/54596</p>
+</div>
+
+
+            </main>
+            <footer>
+                
+<p class="taxonomies">
+
+</p>
+
+                
+            </footer>
+        </article>
+    </body>
+</html>
+        

